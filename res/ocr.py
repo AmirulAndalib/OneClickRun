@@ -29,26 +29,24 @@ class ngrok:
 
   def nameport(self, TOKEN, AUTO):
     if AUTO:
-        try:
-            return tokens.popitem()[1]
-        except KeyError:
-            return "Invalid Token"
+      try:
+          return tokens.popitem()[1]
+      except KeyError:
+          return "Invalid Token"
     elif not TOKEN:
-        if not 'your' in tokens.keys():
-            from IPython import get_ipython
-            from IPython.display import clear_output
-            ipython = get_ipython()
+      if 'your' not in tokens.keys():
+        from IPython import get_ipython
+        from IPython.display import clear_output
+        ipython = get_ipython()
 
-            print(r"Copy authtoken from https://dashboard.ngrok.com/auth")
-            __temp = ipython.magic('%sx read -p "Token :"')
-            tokens['your'] = __temp[0].split(':')[1]
-            USR_Api = "your"
-            clear_output()
-        else:
-            USR_Api = "your"
+        print(r"Copy authtoken from https://dashboard.ngrok.com/auth")
+        __temp = ipython.magic('%sx read -p "Token :"')
+        tokens['your'] = __temp[0].split(':')[1]
+        clear_output()
+      USR_Api = "your"
     else:
-        USR_Api = "mind"
-        tokens["mind"] = TOKEN
+      USR_Api = "mind"
+      tokens["mind"] = TOKEN
     return tokens[USR_Api]
 
 
@@ -108,17 +106,15 @@ class ngrok:
       runSh(f"ngrok start --config {configPath} --all &", shell=True)
     time.sleep(3)
     try:
-        if self.USE_FREE_TOKEN:
-          dport = self.sdict[nServer][0]
-          nServer = 'command_line'
-          host = urllib.request.urlopen(f"http://localhost:{dport}/api/tunnels")
-        else:
-          host = urllib.request.urlopen(f"http://localhost:{dport}/api/tunnels")
-        host = loads(host.read())['tunnels']
-        for h in host:
-          if h['name'] == nServer:
-            host = h['public_url'][8:]
-            break
+      if self.USE_FREE_TOKEN:
+        dport = self.sdict[nServer][0]
+        nServer = 'command_line'
+      host = urllib.request.urlopen(f"http://localhost:{dport}/api/tunnels")
+      host = loads(host.read())['tunnels']
+      for h in host:
+        if h['name'] == nServer:
+          host = h['public_url'][8:]
+          break
     except urllib.error.URLError:
         if v:
           clear_output()
@@ -157,7 +153,7 @@ class ngrok:
 
       raise Exception('Not found tunnels')
     except urllib.error.URLError:
-      for run in range(10):
+      for _ in range(10):
         if v:
           clear_output()
           loadingAn(name='lds')
@@ -241,56 +237,50 @@ def displayUrl(data, btc='b', pNamU='Public URL: ', EcUrl=None, ExUrl=None, cls=
 
 
 def findProcess(process, command="", isPid=False):
-    from psutil import pids, Process
+  from psutil import pids, Process
 
-    if isinstance(process, int):
-        if process in pids():
-            return True
-    else:
-        for pid in pids():
-            try:
-                p = Process(pid)
-                if process in p.name():
-                    for arg in p.cmdline():
-                        if command in str(arg):
-                            return True if not isPid else str(pid)
-                        else:
-                            pass
-                else:
-                    pass
-            except:
-                continue
+  if isinstance(process, int):
+    if process in pids():
+        return True
+  else:
+    for pid in pids():
+      try:
+        p = Process(pid)
+        if process in p.name():
+          for arg in p.cmdline():
+            if command in str(arg):
+              return True if not isPid else str(pid)
+      except:
+          continue
 
 def installArgoTunnel():
-    if checkAvailable(f"{HOME}/tools/argotunnel/cloudflared"):
-        return
-    else:
-        import os
-        from shutil import unpack_archive
-        from urllib.request import urlretrieve
-        
-        os.makedirs(f'{HOME}/tools/argotunnel/', exist_ok=True)
-        aTURL = findPackageR("cloudflare/cloudflared", "cloudflared-linux-amd64")
-        urlretrieve(aTURL, f'{HOME}/tools/argotunnel/cloudflared')
-        # unpack_archive('cloudflared.tgz',
-        #   f'{HOME}/tools/argotunnel')
-        os.chmod(f'{HOME}/tools/argotunnel/cloudflared', 0o755)
+  if checkAvailable(f"{HOME}/tools/argotunnel/cloudflared"):
+    return
+  import os
+  from shutil import unpack_archive
+  from urllib.request import urlretrieve
+
+  os.makedirs(f'{HOME}/tools/argotunnel/', exist_ok=True)
+  aTURL = findPackageR("cloudflare/cloudflared", "cloudflared-linux-amd64")
+  urlretrieve(aTURL, f'{HOME}/tools/argotunnel/cloudflared')
+  # unpack_archive('cloudflared.tgz',
+  #   f'{HOME}/tools/argotunnel')
+  os.chmod(f'{HOME}/tools/argotunnel/cloudflared', 0o755)
         # os.unlink('cloudflared.tgz')
 
 def installNgrok():
-    if checkAvailable("/usr/local/bin/ngrok"):
-        return
-    else:
-        import os
-        from zipfile import ZipFile
-        from urllib.request import urlretrieve
+  if checkAvailable("/usr/local/bin/ngrok"):
+    return
+  import os
+  from zipfile import ZipFile
+  from urllib.request import urlretrieve
 
-        ngURL = "https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip"
-        urlretrieve(ngURL, 'ngrok-amd64.zip')
-        with ZipFile('ngrok-amd64.zip', 'r') as zip_ref:
-            zip_ref.extractall('/usr/local/bin/')
-        os.chmod('/usr/local/bin/ngrok', 0o755)
-        os.unlink('ngrok-amd64.zip')
+  ngURL = "https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip"
+  urlretrieve(ngURL, 'ngrok-amd64.zip')
+  with ZipFile('ngrok-amd64.zip', 'r') as zip_ref:
+      zip_ref.extractall('/usr/local/bin/')
+  os.chmod('/usr/local/bin/ngrok', 0o755)
+  os.unlink('ngrok-amd64.zip')
 
 def installAutoSSH():
     if checkAvailable("/usr/bin/autossh"):
@@ -376,7 +366,7 @@ class LocalhostRun:
     try:
       localhostOpenDB = dict(accessSettingFile("localhostDB.json", v=False))
     except TypeError:
-      localhostOpenDB = dict()
+      localhostOpenDB = {}
 
     if findProcess("autossh", f"80:localhost:{self.port}"):
       try:
@@ -439,11 +429,11 @@ class ArgoTunnel:
     # if self.connection:self.connection.kill()
     import urllib, requests, re
     from urllib.error import HTTPError
-    
+
     try:
       argotunnelOpenDB = dict(accessSettingFile("argotunnelDB.json", v=False))
     except TypeError:
-      argotunnelOpenDB = dict()
+      argotunnelOpenDB = {}
 
     if findProcess("cloudflared", f"localhost:{self.metricPort}"):
       try:
@@ -455,11 +445,11 @@ class ArgoTunnel:
 
     self.connection=Popen(f"{HOME}/tools/argotunnel/cloudflared tunnel --url {self.proto}://0.0.0.0:{self.port} --logfile {HOME}/tools/argotunnel/cloudflared_{self.port}.log --metrics localhost:{self.metricPort}".split(),
       stdout=PIPE, stdin=PIPE, stderr=PIPE, universal_newlines=True)
-    
+
     time.sleep(5)
 
     hostname = None
-    for i in range(20):
+    for _ in range(20):
       try:
         with urllib.request.urlopen(f"http://127.0.0.1:{self.metricPort}/metrics") as response:
             hostname = re.search(r'userHostname=\"https://(.+)\"',
@@ -471,10 +461,10 @@ class ArgoTunnel:
             break
       except HTTPError:
         time.sleep(2)
-        
+
     if not hostname:
       raise RuntimeError("Failed to get user hostname from cloudflared")
-    
+
     argotunnelOpenDB[str(self.port)] = hostname
     accessSettingFile("argotunnelDB.json" , argotunnelOpenDB, v=False)
     return hostname
@@ -504,7 +494,7 @@ class jprq:
     try:
       jprqOpenDB = dict(accessSettingFile("jprqDB.json", v=False))
     except TypeError:
-      jprqOpenDB = dict()
+      jprqOpenDB = {}
 
     if findProcess("jprq", f"{self.port}"):
       try:
@@ -516,7 +506,7 @@ class jprq:
     hostname = f"OneClickRun-{self.ids}"
     self.connection=Popen(f"jprq -s {hostname} {self.port}".split(),
       stdout=PIPE, stdin=PIPE, stderr=PIPE)
-    
+
     time.sleep(3)
 
     # try:
@@ -533,9 +523,7 @@ class jprq:
 
 class PortForward:
   def __init__(self,connections,region=None,SERVICE="localhost",TOKEN=None,USE_FREE_TOKEN=None,config=None):
-    c=dict()
-    for con in connections:
-      c[con[0]]=dict(port=con[1],proto=con[2])
+    c = {con[0]: dict(port=con[1],proto=con[2]) for con in connections}
     self.connections=c
     if config:config[1] = closePort(config[1])
     self.config = config
@@ -547,20 +535,19 @@ class PortForward:
     from IPython.display import clear_output
 
     if self.SERVICE == "localhost":
-        con=self.connections[name]
-        port=con["port"]
-        proto=con["proto"]
-        if(proto=="tcp"):
-          return self.ngrok.start(name,btc,displayB,v)
-        else:
-          if v:
-              clear_output()
-              loadingAn(name="lds")
-              textAn("Starting localhost ...", ty="twg")
-          data = dict(url="https://"+LocalhostRun(port).keep_alive())
-          if displayB:
-              displayUrl(data, btc)
-          return data
+      con=self.connections[name]
+      port=con["port"]
+      proto=con["proto"]
+      if (proto=="tcp"):
+        return self.ngrok.start(name,btc,displayB,v)
+      if v:
+          clear_output()
+          loadingAn(name="lds")
+          textAn("Starting localhost ...", ty="twg")
+      data = dict(url="https://"+LocalhostRun(port).keep_alive())
+      if displayB:
+          displayUrl(data, btc)
+      return data
     elif self.SERVICE == "ngrok":
         return self.ngrok.start(name,btc,displayB,v)
     elif self.SERVICE == "argotunnel":
@@ -599,9 +586,8 @@ def findPackageR(id_repo, p_name, tag_name=False, all_=False):
   import requests
 
   for rawData in requests.get(f"https://api.github.com/repos/{id_repo}/releases").json():
-    if tag_name:
-      if rawData['tag_name'] != tag_name:
-        continue
+    if tag_name and rawData['tag_name'] != tag_name:
+      continue
 
     for f in rawData['assets']:
       if p_name == f['browser_download_url'][-len(p_name):]:
